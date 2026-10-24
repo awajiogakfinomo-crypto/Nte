@@ -49,7 +49,7 @@ services:
       - key: POSTCODE_API_URL
         value: https://api.postcode.gov.ng
       - key: POSTCODE_API_KEY
-        sync: false  # set in dashboard
+        sync: false  # optional - set in dashboard if you have NIPOST key, otherwise mock mode
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
