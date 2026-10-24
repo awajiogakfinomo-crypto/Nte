@@ -1,0 +1,163 @@
+# GitHub Actions: Auto-deploy to Render + Netlify on push to main
+# 1. Add secrets in GitHub repo settings:
+#    RENDER_API_KEY (from Render Account Settings → API Keys)
+#    NETLIFY_AUTH_TOKEN (from Netlify User Settings → Applications → Personal Access Tokens)
+#    NETLIFY_SITE_ID (from Netlify Site Settings → General → Site ID)
+
+name: Deploy to Render + Netlify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  RENDER_BLUEPRINT: render.yaml
+
+jobs:
+  # =========================================
+  # TESTS (run first)
+  # =========================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: usuk
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: usuk_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U usuk"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: [6379:6379]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pytest pytest-asyncio pytest-cov httpx faker
+
+      - name: Run tests
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://usuk:test_password@localhost:5432/usuk_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-for-testing-only
+          POSTCODE_API_KEY: test
+          ENVIRONMENT: testing
+        run: |
+          alembic upgrade head
+          pytest -v --cov=app --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage.xml
+
+  # =========================================
+  # DEPLOY BACKEND TO RENDER
+  # =========================================
+  deploy-render:
+    name: Deploy Backend to Render
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Render
+        uses: render-oss/render-deploy-action@v1
+        with:
+          apiKey: ${{ secrets.RENDER_API_KEY }}
+          blueprint: render.yaml
+          # Wait for deploy to complete
+          waitForDeploy: true
+          # Only deploy services that changed (faster)
+          serviceNames: usuk-api,usuk-celery-worker,usuk-celery-beat
+
+  # =========================================
+  # DEPLOY FRONTEND TO NETLIFY
+  # =========================================
+  deploy-netlify:
+    name: Deploy Frontend to Netlify
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Reflex
+        working-directory: ./frontend/{usuk_frontend
+        run: |
+          pip install reflex==0.6.2
+
+      - name: Build frontend
+        working-directory: ./frontend/{usuk_frontend
+        env:
+          API_URL: https://usuk-api.onrender.com
+        run: |
+          reflex export --frontend-only
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: ./frontend/{usuk_frontend/.web/_static
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions ${{ github.sha }}"
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+  # =========================================
+  # NOTIFICATION (optional)
+  # =========================================
+  notify:
+    name: Notify
+    needs: [deploy-render, deploy-netlify]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slack notification (example)
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": "Usuk deploy ${{ job.status }}",
+              "blocks": [
+                {"type": "section", "text": {"type": "mrkdwn", "text": "*Usuk Deploy* ${{ job.status == 'success' && '✅ Succeeded' || '❌ Failed' }}"}},
+                {"type": "context", "elements": [{"type": "mrkdwn", "text": "Commit: ${{ github.sha }} | Branch: ${{ github.ref_name }}"}]}
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
