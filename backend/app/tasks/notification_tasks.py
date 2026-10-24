@@ -18,7 +18,7 @@ def send_webhook(self, url: str, payload: dict, secret: str = None, organization
         headers = {"Content-Type": "application/json"}
         if secret:
             signature = hmac.new(secret.encode(), json.dumps(payload).encode(), hashlib.sha256).hexdigest()
-            headers["X-Usuk-Signature"] = signature
+            headers["X-Nte-Signature"] = signature
 
         response = httpx.post(url, json=payload, headers=headers, timeout=10)
         response.raise_for_status()

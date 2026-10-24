@@ -16,7 +16,7 @@ async def health_check() -> dict:
     """Basic health check - no dependencies."""
     return {
         "status": "healthy",
-        "service": "usuk-api",
+        "service": "nte-api",
         "version": "0.1.0",
         "environment": settings.ENVIRONMENT,
     }

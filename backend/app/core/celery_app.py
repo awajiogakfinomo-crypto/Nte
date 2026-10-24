@@ -7,7 +7,7 @@ from app.core.config import settings
 
 # Create Celery app
 celery_app = Celery(
-    "usuk",
+    "nte",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
     include=[

@@ -1,7 +1,7 @@
 [project]
-name = "usuk"
+name = "nte"
 version = "0.1.0"
-description = "Usuk - Nigerian Location Intelligence Platform powered by NIPOST Digital Postcode API"
+description = "Nte - Nigerian Location Intelligence Platform powered by NIPOST Digital Postcode API"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

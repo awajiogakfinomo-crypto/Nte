@@ -6,19 +6,19 @@ services:
   # MANAGED POSTGRESQL
   # =========================================
   - type: pserv
-    name: usuk-postgres
+    name: nte-postgres
     plan: free  # free for 90 days, then $7/mo (starter)
     region: oregon  # or frankfurt for EU/Nigeria latency
     postgresMajorVersion: 16
-    databaseName: usuk
-    user: usuk
+    databaseName: nte
+    user: nte
     # password: auto-generated (see env vars below)
 
   # =========================================
   # MANAGED REDIS
   # =========================================
   - type: redis
-    name: usuk-redis
+    name: nte-redis
     plan: free  # 25 MB free, then $7/mo for 100 MB
     region: oregon
     maxmemoryPolicy: allkeys-lru
@@ -27,7 +27,7 @@ services:
   # FASTAPI WEB SERVICE
   # =========================================
   - type: web
-    name: usuk-api
+    name: nte-api
     runtime: docker
     dockerfilePath: ./Dockerfile.backend
     dockerContext: .
@@ -39,12 +39,12 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: usuk-postgres
+          name: nte-postgres
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
-          name: usuk-redis
+          name: nte-redis
           property: connectionString
       - key: POSTCODE_API_URL
         value: https://api.postcode.gov.ng
@@ -59,7 +59,7 @@ services:
       - key: REFRESH_TOKEN_EXPIRE_DAYS
         value: "7"
       - key: CORS_ORIGINS
-        value: https://usuk.netlify.app,https://yourdomain.com
+        value: https://nte.netlify.app,https://yourdomain.com
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -83,7 +83,7 @@ services:
   # CELERY WORKER (Background Worker)
   # =========================================
   - type: worker
-    name: usuk-celery-worker
+    name: nte-celery-worker
     runtime: docker
     dockerfilePath: ./Dockerfile.backend
     dockerContext: .
@@ -94,12 +94,12 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: usuk-postgres
+          name: nte-postgres
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
-          name: usuk-redis
+          name: nte-redis
           property: connectionString
       - key: POSTCODE_API_URL
         value: https://api.postcode.gov.ng
@@ -107,7 +107,7 @@ services:
         sync: false
       - key: SECRET_KEY
         fromService:
-          name: usuk-api
+          name: nte-api
           property: envVars.SECRET_KEY
       - key: ENVIRONMENT
         value: production
@@ -117,7 +117,7 @@ services:
   # CELERY BEAT (Cron Job - runs every minute)
   # =========================================
   - type: cron
-    name: usuk-celery-beat
+    name: nte-celery-beat
     runtime: docker
     dockerfilePath: ./Dockerfile.backend
     dockerContext: .
@@ -129,16 +129,16 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: usuk-postgres
+          name: nte-postgres
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
-          name: usuk-redis
+          name: nte-redis
           property: connectionString
       - key: SECRET_KEY
         fromService:
-          name: usuk-api
+          name: nte-api
           property: envVars.SECRET_KEY
       - key: ENVIRONMENT
         value: production

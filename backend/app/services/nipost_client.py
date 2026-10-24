@@ -112,7 +112,7 @@ class NIPostClient:
                 timeout=httpx.Timeout(30.0, connect=10.0),
                 limits=httpx.Limits(max_connections=50, max_keepalive_connections=20),
                 headers={
-                    "User-Agent": "Usuk/0.1.0",
+                    "User-Agent": "Nte/0.1.0",
                     "Accept": "application/json",
                     **({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}),
                 },

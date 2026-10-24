@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = Field(default=587, description="SMTP port")
     SMTP_USER: Optional[str] = Field(default=None, description="SMTP username")
     SMTP_PASSWORD: Optional[str] = Field(default=None, description="SMTP password")
-    EMAIL_FROM: str = Field(default="Usuk <noreply@usuk.ng>", description="From email address")
+    EMAIL_FROM: str = Field(default="Nte <noreply@usuk.ng>", description="From email address")
 
     # Frontend
     API_URL: str = Field(default="http://localhost:8000", description="Backend API URL")

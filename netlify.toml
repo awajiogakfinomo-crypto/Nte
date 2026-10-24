@@ -3,8 +3,8 @@
 
 [build]
   # Build the Reflex frontend as static files
-  command = "cd frontend/{usuk_frontend && reflex export --frontend-only"
-  publish = "frontend/{usuk_frontend/.web/_static"
+  command = "cd frontend/{nte_frontend && reflex export --frontend-only"
+  publish = "frontend/{nte_frontend/.web/_static"
 
 [build.environment]
   # Node version for any npm dependencies Reflex might need

@@ -1,4 +1,4 @@
-"""Usuk - Nigerian Location Intelligence Platform.
+"""Nte - Nigerian Location Intelligence Platform.
 
 FastAPI application with horizontal scaling support.
 """
@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(
-    title="Usuk API",
+    title="Nte API",
     description="Nigerian Location Intelligence Platform powered by NIPOST Digital Postcode API",
     version="0.1.0",
     docs_url="/docs" if settings.is_development else None,
@@ -124,7 +124,7 @@ app.include_router(usage.router, prefix="/api/v1/usage", tags=["usage"])
 async def root() -> dict:
     """Root endpoint."""
     return {
-        "name": "Usuk API",
+        "name": "Nte API",
         "version": "0.1.0",
         "description": "Nigerian Location Intelligence Platform",
         "docs": "/docs" if settings.is_development else "disabled in production",

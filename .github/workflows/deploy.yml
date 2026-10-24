@@ -26,12 +26,12 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: usuk
+          POSTGRES_USER: nte
           POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: usuk_test
+          POSTGRES_DB: nte_test
         ports: [5432:5432]
         options: >-
-          --health-cmd "pg_isready -U usuk"
+          --health-cmd "pg_isready -U nte"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -61,7 +61,7 @@ jobs:
       - name: Run tests
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql+asyncpg://usuk:test_password@localhost:5432/usuk_test
+          DATABASE_URL: postgresql+asyncpg://nte:test_password@localhost:5432/nte_test
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: test-secret-key-for-testing-only
           POSTCODE_API_KEY: test
@@ -94,7 +94,7 @@ jobs:
           # Wait for deploy to complete
           waitForDeploy: true
           # Only deploy services that changed (faster)
-          serviceNames: usuk-api,usuk-celery-worker,usuk-celery-beat
+          serviceNames: nte-api,nte-celery-worker,nte-celery-beat
 
   # =========================================
   # DEPLOY FRONTEND TO NETLIFY
@@ -113,21 +113,21 @@ jobs:
           python-version: "3.11"
 
       - name: Install Reflex
-        working-directory: ./frontend/{usuk_frontend
+        working-directory: ./frontend/{nte_frontend
         run: |
           pip install reflex==0.6.2
 
       - name: Build frontend
-        working-directory: ./frontend/{usuk_frontend
+        working-directory: ./frontend/{nte_frontend
         env:
-          API_URL: https://usuk-api.onrender.com
+          API_URL: https://nte-api.onrender.com
         run: |
           reflex export --frontend-only
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v3.0
         with:
-          publish-dir: ./frontend/{usuk_frontend/.web/_static
+          publish-dir: ./frontend/{nte_frontend/.web/_static
           production-branch: main
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "Deploy from GitHub Actions ${{ github.sha }}"
